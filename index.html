@@ -65,6 +65,11 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:
 }
 body.edit-mode #reset-btn{display:block}
 
+/* Owner-only controls — hidden for public visitors */
+body:not(.owner-mode) .edit-toggle,
+body:not(.owner-mode) .btn-export,
+body:not(.owner-mode) #saved-badge { display:none !important; }
+
 /* ============================================================
    MAIN / PAGE WRAPPER
 ============================================================ */
@@ -569,7 +574,7 @@ body.pdf-mode .marquee-wrap { mask-image:none; }
 #toast.show{transform:translateX(-50%) translateY(0)}
 </style>
 </head>
-<body>
+<body class="owner-mode">
 
 <!-- ============================================================
      NAVBAR
@@ -595,7 +600,7 @@ body.pdf-mode .marquee-wrap { mask-image:none; }
 </nav>
 
 <!-- TOAST -->
-<div id="toast"></div>
+<div id="toast" class="show">🔑 Owner mode ON — có thể chỉnh sửa</div>
 
 <!-- ============================================================
      MAIN CONTENT
@@ -1581,6 +1586,30 @@ function applyElStyles() {
     if (s && s.fontSize) el.style.fontSize = s.fontSize;
   });
 }
+
+/* ============================================================
+   OWNER MODE  (ẩn edit controls với người xem bình thường)
+   Kích hoạt bằng: URL có ?edit  hoặc  Ctrl+Shift+E
+============================================================ */
+function setOwner(on) {
+  document.body.classList.toggle('owner-mode', on);
+  sessionStorage.setItem('pf_owner', on ? '1' : '0');
+  if (!on && editMode) toggleEdit();
+  toast(on ? '🔑 Owner mode ON — có thể chỉnh sửa' : '🔒 Đã tắt owner mode');
+}
+
+(function initOwner() {
+  var byUrl     = location.search.includes('edit');
+  var bySession = sessionStorage.getItem('pf_owner') === '1';
+  if (byUrl || bySession) document.body.classList.add('owner-mode');
+})();
+
+document.addEventListener('keydown', function(e) {
+  if (e.ctrlKey && e.shiftKey && e.key === 'E') {
+    e.preventDefault();
+    setOwner(!document.body.classList.contains('owner-mode'));
+  }
+});
 
 /* ============================================================
    INIT
